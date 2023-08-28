@@ -5,7 +5,7 @@
 #include <sstream>
 #include <chrono>
 
-#define thread_num 5
+#define thread_num 8
 
 using namespace std;
 
@@ -141,15 +141,30 @@ int compare_two_texts(const string& path1, const string& path2){
     int value2 = levenshteinDistanceParallel(text1,text2);
     auto duration2 = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now()-start2);
     cout << "Distance from two files " << value2 << endl;
-    cout << "Duration in milliseconds for parallel: " << duration2.count();
+    cout << "Duration in milliseconds for parallel: " << duration2.count() << endl;
     return value;
 }
 
 int main(int argc, char **argv)
 
 {
+    cout << "Welcome to project_distance program! Press q to exit..." << endl;
     omp_set_dynamic(0);
     omp_set_num_threads(thread_num);
-    compare_two_texts("text1.txt","text2.txt");
+    string first_filename = "";
+    string second_filename = "";
+    while (true){
+        cout << "Insert first text filename ";
+        cin >> first_filename;     
+        if(first_filename.compare("q")==0){
+            break;
+        }   
+        cout << "Insert second text filename ";
+        cin >> second_filename;
+        if(second_filename.compare("q")==0){
+            break;
+        }   
+        compare_two_texts("texts/" + first_filename,"texts/"+ second_filename);
+    }
     return 0;
 }
