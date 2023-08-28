@@ -15,3 +15,4 @@ In Linux instead:
 ./distance
 ```
 This program calculate the difference between the files inside the texts directory. Make sure to put your file in that directory before running the program.
+Texts examples are taken at this link: https://corpus.canterbury.ac.nz/descriptions/
