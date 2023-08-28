@@ -14,5 +14,4 @@ In Linux instead:
 ```
 ./distance
 ```
-This program calculate the difference between the files "text1.txt" and "text2.txt" in the same directory of distance.cpp
-You could use also other two files, make sure that these two files are in the same directory of distance.cpp and are named "text1.txt" and "text2.txt".
+This program calculate the difference between the files inside the texts directory. Make sure to put your file in that directory before running the program.
