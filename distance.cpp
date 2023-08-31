@@ -3,13 +3,13 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <chrono>
+#include <vector>
 
 #define thread_num 8
 
 using namespace std;
 
-void printmatrix(int* mat,int m, int n){
+void printmatrix(vector<int> mat,int m, int n){
     for(int i =0; i< m;i++){
         for(int j=0; j< n;j++){
             cout<< mat[i*n+j];
@@ -25,16 +25,16 @@ int levenshteinDistance(string string1, string string2)
     int m = string1.length()+1;
     int n = string2.length()+1;
 
-    int *mat = new int[m * n];
+    vector<int> mat(m * n,0);
 
     for (int i = 0; i < m; i++)
     {
-        mat[i * n] = i;
+        mat.at(i * n) = i;
     }
 
     for (int j = 0; j < n; j++)
     {
-        mat[j] = j;
+        mat.at(j) = j;
     }
 
 
@@ -51,11 +51,9 @@ int levenshteinDistance(string string1, string string2)
             {
                 costoperation = 1;
             }
-            mat[i * n + j] = min(min(mat[(i-1) * n + j] + 1, mat[i * n + j - 1] + 1), mat[(i-1) * n + j - 1] + costoperation);
+            mat.at(i * n + j) = min(min(mat[(i-1) * n + j] + 1, mat[i * n + j - 1] + 1), mat[(i-1) * n + j - 1] + costoperation);
         }
     }
-    
-    //printmatrix(mat,m,n);
     return mat[m * n - 1];
 }
 
@@ -64,55 +62,65 @@ int levenshteinDistanceParallel(string string1, string string2)
     int m = string1.length()+1;
     int n = string2.length()+1;
 
-    int *mat = new int[m * n];
+    vector<int> mat(m*n,0);
     
-    #pragma omp parallel for 
-    for (int i = 0; i < m; i++)
+    #pragma omp parallel 
     {
-        mat[i * n] = i;
+        int i,j;
+        #pragma omp for private(i,j)
+        for (i = 0; i < m; i++)
+        {
+            mat.at(i * n) = i;
+        }
+        #pragma omp for private(i,j)
+        for (int j = 0; j < n; j++)
+        {
+            mat.at(j) = j;
+        }
     }
-    #pragma omp parallel for 
-    for (int j = 0; j < n; j++)
-    {
-        mat[j] = j;
-    }
-    
 
     for(int i=1; i < m; i++){
-        #pragma omp parallel for
-        for (int count = 1; count<=i;count++){
-            int j_start = 0;
-            int i_start = i+1;
-            int costoperation = 0;
-            if(j_start + count< n && i_start - count>=1){
-                j_start+=count;
-                i_start-=count;
-                if(string1[i_start-1]==string2[j_start-1]){
-                    costoperation=0;
-                } else {
-                    costoperation=1;
+        #pragma omp parallel
+        {
+            #pragma omp for nowait
+            for (int count = 1; count<=i;count++){
+                int j_start = 0;
+                int i_start = i+1;
+                int costoperation = 0;
+                if(j_start + count< n && i_start - count>=1){
+                    j_start+=count;
+                    i_start-=count;
+                    if(string1[i_start-1]==string2[j_start-1]){
+                        costoperation=0;
+                    } else {
+                        costoperation=1;
+                    }
+                    mat.at(i_start * n + j_start) = min(min(mat[(i_start-1) * n + j_start] + 1, mat[i_start * n + j_start - 1] + 1), mat[(i_start-1) * n + j_start - 1] + costoperation);
                 }
-                mat[i_start * n + j_start] = min(min(mat[(i_start-1) * n + j_start] + 1, mat[i_start * n + j_start - 1] + 1), mat[(i_start-1) * n + j_start - 1] + costoperation);
             }
+
         }
           
     }
     
     for (int j=2; j <= n; j++){
-        #pragma omp parallel for
-        for(int count=1; count < n;count++){
-            int j_start = j-1;
-            int i_start = m;
-            int costoperation = 0;
-            if(j_start + count< n && i_start - count>=1){
-                j_start+=count;
-                i_start-=count;
-                if(string1[i_start-1]==string2[j_start-1]){
-                    costoperation=0;
-                } else {
-                    costoperation=1;
+        #pragma omp parallel
+        {
+            #pragma omp for nowait
+            for(int count=1; count < n;count++){
+                int j_start = j-1;
+                int i_start = m;
+                int costoperation = 0;
+                if(j_start + count< n && i_start - count>=1){
+                    j_start+=count;
+                    i_start-=count;
+                    if(string1[i_start-1]==string2[j_start-1]){
+                        costoperation=0;
+                    } else {
+                        costoperation=1;
+                    }
+                    mat.at(i_start * n + j_start) = min(min(mat[(i_start-1) * n + j_start] + 1, mat[i_start * n + j_start - 1] + 1), mat[(i_start-1) * n + j_start - 1] + costoperation);
                 }
-                mat[i_start * n + j_start] = min(min(mat[(i_start-1) * n + j_start] + 1, mat[i_start * n + j_start - 1] + 1), mat[(i_start-1) * n + j_start - 1] + costoperation);
             }
         }
     }
@@ -136,13 +144,13 @@ int compare_two_texts(const string& path1, const string& path2){
     int value = levenshteinDistance(text1,text2); 
     int end = omp_get_wtime();
     cout << "Distance from two files " << value << endl;
-    cout << "Duration in seconds for sequential: " << end-start <<endl;
+    cout << "Duration in seconds for sequencial: " << end-start <<endl;
     start = omp_get_wtime();
     int value2 = levenshteinDistanceParallel(text1,text2);
     end = omp_get_wtime();
     cout << "Distance from two files " << value2 << endl;
     cout << "Duration in seconds for parallel: " << end-start << endl;
-    return value;
+    return value2;
 }
 
 int main(int argc, char **argv)
