@@ -132,16 +132,16 @@ string getStringFile(const string& path){
 int compare_two_texts(const string& path1, const string& path2){
     string text1 = getStringFile(path1);
     string text2 = getStringFile(path2);
-    auto start = chrono::high_resolution_clock::now();
+    int start = omp_get_wtime();
     int value = levenshteinDistance(text1,text2); 
-    auto duration = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now()-start);
+    int end = omp_get_wtime();
     cout << "Distance from two files " << value << endl;
-    cout << "Duration in milliseconds for sequencial: " << duration.count() <<endl;
-    auto start2 = chrono::high_resolution_clock::now();
+    cout << "Duration in seconds for sequencial: " << end-start <<endl;
+    start = omp_get_wtime();
     int value2 = levenshteinDistanceParallel(text1,text2);
-    auto duration2 = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now()-start2);
+    end = omp_get_wtime();
     cout << "Distance from two files " << value2 << endl;
-    cout << "Duration in milliseconds for parallel: " << duration2.count() << endl;
+    cout << "Duration in seconds for parallel: " << end-start << endl;
     return value;
 }
 
