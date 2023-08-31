@@ -136,7 +136,7 @@ int compare_two_texts(const string& path1, const string& path2){
     int value = levenshteinDistance(text1,text2); 
     int end = omp_get_wtime();
     cout << "Distance from two files " << value << endl;
-    cout << "Duration in seconds for sequencial: " << end-start <<endl;
+    cout << "Duration in seconds for sequential: " << end-start <<endl;
     start = omp_get_wtime();
     int value2 = levenshteinDistanceParallel(text1,text2);
     end = omp_get_wtime();
